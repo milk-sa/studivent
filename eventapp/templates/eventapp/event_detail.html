@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Detail</title>
+</head>
+<body>
+    <h1 id="title">Loading event...</h1>
+    <p><strong>Date:</strong> <span id="date"></span></p>
+    <p><strong>Location:</strong> <span id="location"></span></p>
+    <p><strong>Description:</strong> <span id="description"></span></p>
+
+    <a href="/">← Back to Events</a>
+
+    <script>
+    const pathParts = window.location.pathname.split('/');  
+    // Expecting: ['', 'event', '1', 'view', '']
+    console.log("Path parts:", pathParts);
+
+    const eventId = pathParts[2];  // index 2 is the ID (e.g., '1' from /event/1/view/)
+    const apiUrl = `/events/${eventId}/`;
+
+    console.log("Fetching event from:", apiUrl);
+
+    fetch(`/events/${eventId}/`)
+
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(event => {
+            document.getElementById('title').textContent = event.title;
+            document.getElementById('date').textContent = event.date;
+            document.getElementById('location').textContent = event.location;
+            document.getElementById('description').textContent = event.description;
+        })
+        .catch(error => {
+            console.error('Error loading event:', error);
+            document.body.innerHTML = `<p>Failed to load event details: ${error.message}</p>`;
+        });
+</script>
+
+</body>
+</html>

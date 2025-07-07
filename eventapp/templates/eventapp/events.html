@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Events (JSON)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        .event {
+            background: white;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .event h3 {
+            margin: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Event List</h1>
+    <div id="events-container">
+        <p>Loading events...</p>
+    </div>
+    {% for event in events %}
+    <div class="event">
+        <h2>
+            <a href="{% url 'event_detail' event.id %}">{{ event.name }}</a>
+        </h2>
+        <p>{{event.description}}</p>
+        <p>{{ event.date }}</p>
+        <p>{{ event.location }}</p>
+    </div>
+{% endfor %}
+
+    <script>
+        fetch('/events/')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('events-container');
+                container.innerHTML = ''; // Clear loading message
+
+                if (data.length === 0) {
+                    container.innerHTML = '<p>No events available.</p>';
+                    return;
+                }
+
+                data.forEach(event => {
+                    const div = document.createElement('div');
+                    div.className = 'event';
+                    div.innerHTML = `
+                        
+
+                        <h3>  <a href="/events/${event.id}/view/">${event.title}</a></h3>
+                        <p><strong>Date:</strong> ${new Date(event.date).toLocaleString()}</p>
+                        
+                    `;
+                    container.appendChild(div);
+                });
+            })
+            .catch(error => {
+                document.getElementById('events-container').innerHTML = '<p>Error loading events.</p>';
+                console.error('Fetch error:', error);
+            });
+    </script>
+
+</body>
+</html>
