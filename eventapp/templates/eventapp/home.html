@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
+    <button onclick="loginUser()">Login</button>
+    <p id="msg" style="color: red;"></p>
+
+    <p>Don't have an account? <a href="/reg/">Register here</a></p>
+
+    <script>
+        function loginUser() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/login/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            })
+            .then(res => res.json().then(data => ({status: res.status, body: data})))
+            .then(({status, body}) => {
+                if (status === 200) {
+                    window.location.href = '/home/';
+                } else {
+                    document.getElementById('msg').textContent = body.error;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -37,11 +37,16 @@ def event_detail(request, pk):
     }
     return JsonResponse(data)
 
-def event_detail_page(request, event_id):
-    return render(request, 'eventapp/event_detail.html')
 
 def event_detail_page(request, event_id):
     return render(request, 'eventapp/event_detail.html')
+
+def account_page(request):
+    return render(request, 'eventapp/home.html')
+
+def register_page(request):
+    return render(request,'eventapp/register.html')
+
 
 @csrf_exempt
 def register_view(request):
