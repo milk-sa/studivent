@@ -9,35 +9,76 @@
     <p><strong>Location:</strong> <span id="location"></span></p>
     <p><strong>Description:</strong> <span id="description"></span></p>
 
+    <div id="rsvp-section">
+        <button onclick="sendRSVP('yes')">Loading...</button>
+    </div>
+
+    <p>Total attendees: <span id="rsvp-count">...</span></p>
+
     <a href="/home/">← Back to Events</a>
 
-    <script>
-    const pathParts = window.location.pathname.split('/');  
-    // Expecting: ['', 'event', '1', 'view', '']
-    console.log("Path parts:", pathParts);
+<script>
+const pathParts = window.location.pathname.split('/');
+const eventId = pathParts[2];  // /event/5/view/
 
-    const eventId = pathParts[2];  // index 2 is the ID (e.g., '1' from /event/1/view/)
-    const apiUrl = `/events/${eventId}/`;
+// 1. Load event details
+fetch(`/events/${eventId}/`)
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('title').textContent = data.title;
+    document.getElementById('date').textContent = data.date;
+    document.getElementById('location').textContent = data.location;
+    document.getElementById('description').textContent = data.description;
+  });
 
-    console.log("Fetching event from:", apiUrl);
+// 2. Load RSVP status
+fetch(`/event/${eventId}/rsvp-status/`)
+  .then(res => res.json())
+  .then(data => {
+    updateRSVPButton(data.joined);
+  });
 
-    fetch(`/events/${eventId}/`)
+// Load RSVP count
+fetch(`/event/${eventId}/rsvp-count/`)
+  .then(res => res.json())
+  .then(data => {
+    console.log("RSVP count data:", data); // 👈 check in browser console
+    document.getElementById('rsvp-count').textContent = data.count;
+  })
+  .catch(err => {
+    console.error("Failed to load RSVP count", err);
+  });
 
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-        })
-        .then(event => {
-            document.getElementById('title').textContent = event.title;
-            document.getElementById('date').textContent = event.date;
-            document.getElementById('location').textContent = event.location;
-            document.getElementById('description').textContent = event.description;
-        })
-        .catch(error => {
-            console.error('Error loading event:', error);
-            document.body.innerHTML = `<p>Failed to load event details: ${error.message}</p>`;
-        });
+function updateRSVPButton(joined) {
+  const section = document.getElementById('rsvp-section');
+  if (joined) {
+    section.innerHTML = `<button onclick="sendRSVP('no')">Cancel RSVP</button>`;
+  } else {
+    section.innerHTML = `<button onclick="sendRSVP('yes')">Join Event</button>`;
+  }
+}
+
+function sendRSVP(status) {
+  fetch(`/event/${eventId}/rsvp/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({ status })
+  })
+  .then(res => res.json())
+  .then(data => {
+    updateRSVPButton(data.status === 'yes');
+
+    // Refresh RSVP count
+    fetch(`/event/${eventId}/rsvp-count/`)
+      .then(res => res.json())
+      .then(countData => {
+        document.getElementById('rsvp-count').textContent = countData.count;
+      });
+  });
+}
 </script>
-
 </body>
 </html>

@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.http import require_POST, require_http_methods
+
 
 # Create your views here.
 def home_view(request):
@@ -38,6 +40,19 @@ def event_detail(request, pk):
     return JsonResponse(data)
 
 
+
+@login_required
+def rsvp_status_view(request, event_id):
+    try:
+        has_joined = RSVP.objects.filter(user=request.user, event_id=event_id, status='yes').exists()
+        return JsonResponse({'joined': has_joined})
+    except event.DoesNotExist:
+        return JsonResponse({'error': 'Event not found'}, status=404)
+
+
+def rsvp_count_view(request, event_id):
+    count = RSVP.objects.filter(event_id=event_id, status='yes').count()
+    return JsonResponse({'count': count})
 def event_detail_page(request, event_id):
     return render(request, 'eventapp/event_detail.html')
 
@@ -67,6 +82,7 @@ def register_view(request):
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
 @csrf_exempt
+@require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.method == 'POST':
         try:
@@ -87,17 +103,15 @@ def login_view(request):
             return JsonResponse({'message': 'Login successful'}, status=200)
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=401)
-
+    else:
+        # GET request: show login form
+        return render(request, 'eventapp/home.html')
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
-@csrf_exempt
+@require_POST
 def logout_view(request):
-    if request.method == 'POST':
-        logout(request)
-        response = JsonResponse({'message': 'Logout successful'})
-        print("Logout response:", response.content)  # Debug
-        return response
-    return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    logout(request)
+    return redirect('login')
 
 
 from django.views.decorators.csrf import csrf_exempt
@@ -106,7 +120,7 @@ from django.contrib.auth.decorators import login_required
 import json
 from .models import event, RSVP
 
-@csrf_exempt
+
 @login_required
 def rsvp_view(request, event_id):
     if request.method == 'POST':

@@ -11,11 +11,14 @@ urlpatterns = [
     path('reg/',views.register_page),
     path('register/', views.register_view, name='register'),
     path('', views.account_page, name='account'),
+    path('event/<int:event_id>/rsvp-count/', views.rsvp_count_view, name='rsvp_count'),
+
 
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('event/<int:event_id>/rsvp/', rsvp_view, name='rsvp'),
-    
+    path('event/<int:event_id>/rsvp-status/', views.rsvp_status_view, name='rsvp_status'),
+
 
 ]
 
