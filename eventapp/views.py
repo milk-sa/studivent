@@ -13,9 +13,10 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 
 # Create your views here.
+@login_required
 def home_view(request):
     return render(request, 'eventapp/events.html')
-
+@login_required
 def list_events(request):
     events = event.objects.all().order_by('-date')
     data = [
@@ -27,7 +28,7 @@ def list_events(request):
         for event in events
     ]
     return JsonResponse(data, safe=False)
-
+@login_required
 def event_detail(request, pk):
     e = get_object_or_404(event, pk=pk)  # ← fetch single event object
     data = {
@@ -49,16 +50,18 @@ def rsvp_status_view(request, event_id):
     except event.DoesNotExist:
         return JsonResponse({'error': 'Event not found'}, status=404)
 
-
+@login_required
 def rsvp_count_view(request, event_id):
     count = RSVP.objects.filter(event_id=event_id, status='yes').count()
     return JsonResponse({'count': count})
+@login_required
 def event_detail_page(request, event_id):
     return render(request, 'eventapp/event_detail.html')
 
+@login_required
 def account_page(request):
     return render(request, 'eventapp/home.html')
-
+@login_required
 def register_page(request):
     return render(request,'eventapp/register.html')
 
@@ -80,6 +83,34 @@ def register_view(request):
             return JsonResponse({'errors': form.errors}, status=400)
 
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+@login_required
+def myevents(request):
+    return render(request,"eventapp/my_events.html")
+@login_required
+
+
+def my_rsvped_events(request):
+    if request.user.is_authenticated:
+        # ✅ Filter for only 'yes' RSVPs by the logged-in user
+        rsvps = RSVP.objects.filter(user=request.user, status='yes').select_related('event')
+
+        events = []
+        for rsvp in rsvps:
+            event = rsvp.event
+            print(f"RSVP event: {event.title}, RSVP user: {rsvp.user.username}, status: {rsvp.status}")
+
+            events.append({
+                'id': event.id,
+                'title': event.title,
+                'date': event.date.strftime('%Y-%m-%d'),
+                'location': event.location,
+            })
+
+        return JsonResponse(events, safe=False)
+    else:
+        return JsonResponse({'error': 'User not authenticated'}, status=401)
+
+
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -114,11 +145,6 @@ def logout_view(request):
     return redirect('login')
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-import json
-from .models import event, RSVP
 
 
 @login_required

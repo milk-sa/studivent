@@ -18,6 +18,11 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('event/<int:event_id>/rsvp/', rsvp_view, name='rsvp'),
     path('event/<int:event_id>/rsvp-status/', views.rsvp_status_view, name='rsvp_status'),
+    path('my_rsvped_events/', views.my_rsvped_events, name='my_rsvped_events'),
+
+    path('myevents/',views.myevents, name = 'myevents')
+    
+
 
 
 ]
